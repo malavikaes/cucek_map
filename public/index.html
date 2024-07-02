@@ -1,0 +1,442 @@
+ <!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panoramic Viewer with Horizontal Navigation Buttons</title>
+    <link rel="stylesheet" href="pannellum/pannellum.css">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        #panorama {
+            width: 100vw;
+            height: 80vh;
+            position: relative;
+        }
+        .nav-arrows {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            position: absolute;
+            bottom: 10px;
+        }
+        .nav-arrows button {
+            margin: 5px;
+            padding: 8px 16px;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            outline: none;
+            display: flex;
+            align-items: center;
+        }
+        .nav-arrows button img {
+            width: 20px;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="panorama"></div>
+    <audio id="audioPlayer1" src="audio1.mp3"></audio>
+    <audio id="audioPlayer2" src="audio2.mp3"></audio>
+
+    <div class="nav-arrows">
+        <button onclick="moveLeft()"><img src="left-arrow.png" alt="Left"></button>
+        <button onclick="moveRight()"><img src="right-arrow.png" alt="Right"></button>
+        <button onclick="moveUp()"><img src="up-arrow.png" alt="Up"></button>
+        <button onclick="moveDown()"><img src="down-arrow.png" alt="Down"></button>
+    </div>
+
+    <script src="pannellum/pannellum.js"></script>
+    <script>
+        let viewer;
+        const audioPlayer1 = document.getElementById('audioPlayer1');
+        const audioPlayer2 = document.getElementById('audioPlayer2');
+
+        // Function to initialize Pannellum viewer and load panoramas
+        function initViewer() {
+            fetch('/api/panoramas')
+                .then(response => response.json())
+                .then(panoramas => {
+                    if (panoramas.length > 0) {
+                        const scenes = {};
+                        panoramas.forEach(panorama => {
+                            scenes[panorama.sceneId] = {
+                                title: panorama.title,
+                                type: 'equirectangular',
+                                panorama: panorama.imagePath,
+                                hotSpots: panorama.hotspots.map(hotspot => ({
+                                    pitch: hotspot.pitch,
+                                    yaw: hotspot.yaw,
+                                    type: 'scene',
+                                    text: hotspot.text,
+                                    sceneId: hotspot.sceneId
+                                }))
+                            };
+                        });
+
+                        viewer = pannellum.viewer('panorama', {
+                            "default": {
+                                "firstScene": panoramas[0].sceneId,
+                                "author": "CUCEK",
+                                "sceneFadeDuration": 1000
+                            },
+                            "scenes": scenes
+                        });
+
+                        // Set up event listener for scene changes
+                        viewer.on('scenechange', function(sceneId) {
+                            handleSceneChange(sceneId);
+                        });
+
+                        // Play audio for initial scene
+                        playAudio(audioPlayer1);
+
+                    } else {
+                        alert('No panoramas found.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching panoramas:', error);
+                });
+        }
+
+        function handleSceneChange(sceneId) {
+            if (sceneId === 'scene1') {
+                audioPlayer2.pause();
+                audioPlayer2.currentTime = 0;
+                playAudio(audioPlayer1);
+            } else if (sceneId === 'scene2') {
+                audioPlayer1.pause();
+                audioPlayer1.currentTime = 0;
+                playAudio(audioPlayer2);
+            } else {
+                audioPlayer1.pause();
+                audioPlayer1.currentTime = 0;
+                audioPlayer2.pause();
+                audioPlayer2.currentTime = 0;
+            }
+        }
+
+        // Navigation functions
+        function moveLeft() {
+            if (viewer) viewer.setYaw(viewer.getYaw() - 90);
+        }
+
+        function moveRight() {
+            if (viewer) viewer.setYaw(viewer.getYaw() + 90);
+        }
+
+        function moveUp() {
+            if (viewer) viewer.setPitch(viewer.getPitch() + 10);
+        }
+
+        function moveDown() {
+            if (viewer) viewer.setPitch(viewer.getPitch() - 10);
+        }
+
+        // Function to play audio with user interaction handling
+        function playAudio(audioElement) {
+            audioElement.currentTime = 0; // Restart the audio
+            const playPromise = audioElement.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.log('Audio playback was prevented. Trying to play after user interaction.');
+                    document.body.addEventListener('click', () => {
+                        audioElement.play();
+                    }, { once: true });
+                });
+            }
+        }
+
+        // Initialize viewer on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initViewer();
+        });
+    </script>
+</body>
+</html>   -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panoramic Viewer with Dashboard</title>
+    <link rel="stylesheet" href="pannellum/pannellum.css">
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        #panorama {
+            width: 100vw;
+            height: 100vh;
+        }
+        .dashboard {
+            position: absolute;
+            top: 100px; /* Adjust as needed to fit below Pannellum buttons */
+            left: 20px; /* Position to the right slightly to not cover Pannellum buttons */
+            width: 250px; /* Shortened width */
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+            z-index: 1000;
+            transform: translateX(-100%);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .dashboard.active {
+            transform: translateX(0);
+        }
+        .dashboard ul {
+            list-style-type: none;
+            padding: 0;
+            width: 100%;
+        }
+        .dashboard li {
+            cursor: pointer;
+            padding: 10px;
+            margin-bottom: 5px;
+            background-color: #f0f0f0;
+            transition: background-color 0.3s;
+            width: 100%;
+            text-align: center;
+        }
+        .dashboard li:hover {
+            background-color: #ddd;
+        }
+        #toggleDashboard {
+            position: fixed;
+            top: 100px; /* Adjust to match the dashboard's top position */
+            left: 5px; /* Align to the left edge of the screen */
+            z-index: 1001;
+            background-color: #fff;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .nav-arrows {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 500;
+        }
+        .nav-arrows button {
+            margin: 5px;
+            padding: 8px 16px;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            outline: none;
+            display: flex;
+            align-items: center;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+        .nav-arrows button:hover {
+            opacity: 1;
+        }
+        .nav-arrows button img {
+            width: 20px;
+            height: 20px;
+        }
+        .pnlm-ui-button {
+            display: block !important;
+        }
+        .search-bar {
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        .search-bar input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+            border: none;
+            outline: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="panorama"></div>
+    <button id="toggleDashboard">↔️</button>
+    <div class="dashboard" id="dashboard">
+        <div class="search-bar">
+            <input type="text" placeholder="Search scenes..." id="searchInput" oninput="searchScenes()">
+        </div>
+        <ul id="placeList">
+            <!-- Scene list items will be populated here -->
+        </ul>
+    </div>
+
+    <audio id="audioPlayer1" src="audio1.mp3"></audio>
+    <audio id="audioPlayer2" src="audio2.mp3"></audio>
+    <audio id="audioPlayer3" src="audio3.mp3"></audio>
+    <audio id="audioPlayer4" src="audio4.mp3"></audio>
+
+    <div class="nav-arrows">
+        <button onclick="moveLeft()"><img src="left-arrow.png" alt="Left"></button>
+        <button onclick="moveRight()"><img src="right-arrow.png" alt="Right"></button>
+        <button onclick="moveUp()"><img src="up-arrow.png" alt="Up"></button>
+        <button onclick="moveDown()"><img src="down-arrow.png" alt="Down"></button>
+    </div>
+
+    <script src="pannellum/pannellum.js"></script>
+    <script>
+        let viewer;
+        const audioPlayers = {
+            scene1: document.getElementById('audioPlayer1'),
+            scene2: document.getElementById('audioPlayer2'),
+            scene3: document.getElementById('audioPlayer3'),
+            scene4: document.getElementById('audioPlayer4')
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initViewer();
+        });
+
+        function initViewer() {
+            const scenes = {
+                scene1: {
+                    title: 'Scene 1',
+                    type: 'equirectangular',
+                    panorama: 'sample-pano.jpg',
+                    hotSpots: [
+                        { pitch: 10, yaw: 20, type: 'scene', text: 'To Scene 2', sceneId: 'scene2' }
+                    ]
+                },
+                scene2: {
+                    title: 'Scene 2',
+                    type: 'equirectangular',
+                    panorama: 'pano2.jpg',
+                    hotSpots: [
+                        { pitch: -10, yaw: -20, type: 'scene', text: 'To Scene 1', sceneId: 'scene1' }
+                    ]
+                },
+                scene3: {
+                    title: 'Scene 3',
+                    type: 'equirectangular',
+                    panorama: 'pano3.jpg',
+                    hotSpots: [
+                        { pitch: 5, yaw: 30, type: 'scene', text: 'To Scene 4', sceneId: 'scene4' }
+                    ]
+                },
+                scene4: {
+                    title: 'Scene 4',
+                    type: 'equirectangular',
+                    panorama: 'pano4.jpg',
+                    hotSpots: [
+                        { pitch: -5, yaw: -30, type: 'scene', text: 'To Scene 3', sceneId: 'scene3' }
+                    ]
+                }
+                // Add more scenes as needed
+            };
+
+            viewer = pannellum.viewer('panorama', {
+                "default": {
+                    "firstScene": 'scene1',
+                    "author": "CUCEK",
+                    "sceneFadeDuration": 1000
+                },
+                "scenes": scenes
+            });
+
+            viewer.on('scenechange', function(sceneId) {
+                handleSceneChange(sceneId);
+            });
+
+            playAudio(audioPlayers['scene1']);
+
+            const placeList = document.getElementById('placeList');
+            placeList.innerHTML = ''; // Clear existing list items
+
+            for (const [sceneId, scene] of Object.entries(scenes)) {
+                const listItem = document.createElement('li');
+                listItem.textContent = scene.title;
+                listItem.onclick = () => viewer.loadScene(sceneId);
+                placeList.appendChild(listItem);
+            }
+        }
+
+        function handleSceneChange(sceneId) {
+            for (const [key, audioPlayer] of Object.entries(audioPlayers)) {
+                audioPlayer.pause();
+                audioPlayer.currentTime = 0;
+            }
+            playAudio(audioPlayers[sceneId]);
+        }
+
+        function playAudio(audioElement) {
+            if (audioElement) {
+                audioElement.currentTime = 0; // Restart the audio
+                const playPromise = audioElement.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log('Audio playback was prevented. Trying to play after user interaction.');
+                        document.body.addEventListener('click', () => {
+                            audioElement.play();
+                        }, { once: true });
+                    });
+                }
+            }
+        }
+
+        document.getElementById('toggleDashboard').addEventListener('click', function() {
+            const dashboard = document.getElementById('dashboard');
+            dashboard.classList.toggle('active');
+            const toggleButton = document.getElementById('toggleDashboard');
+            toggleButton.textContent = dashboard.classList.contains('active') ? 'X' : '↔️';
+        });
+
+        function searchScenes() {
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            const listItems = document.querySelectorAll('#placeList li');
+            listItems.forEach(item => {
+                if (item.textContent.toLowerCase().includes(searchInput)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Navigation functions
+        function moveLeft() {
+            if (viewer) viewer.setYaw(viewer.getYaw() - 90);
+        }
+
+        function moveRight() {
+            if (viewer) viewer.setYaw(viewer.getYaw()+90);
+        }
+        function moveUp(){
+            if(viewer)viewer.setPitch(viewer.getPitch()+10);
+        }
+
+
+        function moveDown() {
+            if (viewer) viewer.setPitch(viewer.getPitch() - 10);
+        }
+    </script>
+</body>
+</html>
