@@ -1,173 +1,3 @@
- <!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panoramic Viewer with Horizontal Navigation Buttons</title>
-    <link rel="stylesheet" href="pannellum/pannellum.css">
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
-        }
-        #panorama {
-            width: 100vw;
-            height: 80vh;
-            position: relative;
-        }
-        .nav-arrows {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            position: absolute;
-            bottom: 10px;
-        }
-        .nav-arrows button {
-            margin: 5px;
-            padding: 8px 16px;
-            background-color: transparent;
-            border: none;
-            cursor: pointer;
-            outline: none;
-            display: flex;
-            align-items: center;
-        }
-        .nav-arrows button img {
-            width: 20px;
-            height: 20px;
-        }
-    </style>
-</head>
-<body>
-    <div id="panorama"></div>
-    <audio id="audioPlayer1" src="audio1.mp3"></audio>
-    <audio id="audioPlayer2" src="audio2.mp3"></audio>
-
-    <div class="nav-arrows">
-        <button onclick="moveLeft()"><img src="left-arrow.png" alt="Left"></button>
-        <button onclick="moveRight()"><img src="right-arrow.png" alt="Right"></button>
-        <button onclick="moveUp()"><img src="up-arrow.png" alt="Up"></button>
-        <button onclick="moveDown()"><img src="down-arrow.png" alt="Down"></button>
-    </div>
-
-    <script src="pannellum/pannellum.js"></script>
-    <script>
-        let viewer;
-        const audioPlayer1 = document.getElementById('audioPlayer1');
-        const audioPlayer2 = document.getElementById('audioPlayer2');
-
-        // Function to initialize Pannellum viewer and load panoramas
-        function initViewer() {
-            fetch('/api/panoramas')
-                .then(response => response.json())
-                .then(panoramas => {
-                    if (panoramas.length > 0) {
-                        const scenes = {};
-                        panoramas.forEach(panorama => {
-                            scenes[panorama.sceneId] = {
-                                title: panorama.title,
-                                type: 'equirectangular',
-                                panorama: panorama.imagePath,
-                                hotSpots: panorama.hotspots.map(hotspot => ({
-                                    pitch: hotspot.pitch,
-                                    yaw: hotspot.yaw,
-                                    type: 'scene',
-                                    text: hotspot.text,
-                                    sceneId: hotspot.sceneId
-                                }))
-                            };
-                        });
-
-                        viewer = pannellum.viewer('panorama', {
-                            "default": {
-                                "firstScene": panoramas[0].sceneId,
-                                "author": "CUCEK",
-                                "sceneFadeDuration": 1000
-                            },
-                            "scenes": scenes
-                        });
-
-                        // Set up event listener for scene changes
-                        viewer.on('scenechange', function(sceneId) {
-                            handleSceneChange(sceneId);
-                        });
-
-                        // Play audio for initial scene
-                        playAudio(audioPlayer1);
-
-                    } else {
-                        alert('No panoramas found.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching panoramas:', error);
-                });
-        }
-
-        function handleSceneChange(sceneId) {
-            if (sceneId === 'scene1') {
-                audioPlayer2.pause();
-                audioPlayer2.currentTime = 0;
-                playAudio(audioPlayer1);
-            } else if (sceneId === 'scene2') {
-                audioPlayer1.pause();
-                audioPlayer1.currentTime = 0;
-                playAudio(audioPlayer2);
-            } else {
-                audioPlayer1.pause();
-                audioPlayer1.currentTime = 0;
-                audioPlayer2.pause();
-                audioPlayer2.currentTime = 0;
-            }
-        }
-
-        // Navigation functions
-        function moveLeft() {
-            if (viewer) viewer.setYaw(viewer.getYaw() - 90);
-        }
-
-        function moveRight() {
-            if (viewer) viewer.setYaw(viewer.getYaw() + 90);
-        }
-
-        function moveUp() {
-            if (viewer) viewer.setPitch(viewer.getPitch() + 10);
-        }
-
-        function moveDown() {
-            if (viewer) viewer.setPitch(viewer.getPitch() - 10);
-        }
-
-        // Function to play audio with user interaction handling
-        function playAudio(audioElement) {
-            audioElement.currentTime = 0; // Restart the audio
-            const playPromise = audioElement.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    console.log('Audio playback was prevented. Trying to play after user interaction.');
-                    document.body.addEventListener('click', () => {
-                        audioElement.play();
-                    }, { once: true });
-                });
-            }
-        }
-
-        // Initialize viewer on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            initViewer();
-        });
-    </script>
-</body>
-</html>   -->
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -296,10 +126,10 @@
     <audio id="audioPlayer4" src="audio4.mp3"></audio>
 
     <div class="nav-arrows">
-        <button onclick="moveLeft()"><img src="left-arrow.png" alt="Left"></button>
-        <button onclick="moveRight()"><img src="right-arrow.png" alt="Right"></button>
-        <button onclick="moveUp()"><img src="up-arrow.png" alt="Up"></button>
-        <button onclick="moveDown()"><img src="down-arrow.png" alt="Down"></button>
+        <button onclick="moveLeft()"><img src="icons/left-arrow.png" alt="Left"></button>
+        <button onclick="moveRight()"><img src="icons/right-arrow.png" alt="Right"></button>
+        <button onclick="moveUp()"><img src="icons/up-arrow.png" alt="Up"></button>
+        <button onclick="moveDown()"><img src="icons/down-arrow.jpg" alt="Down"></button>
     </div>
 
     <script src="pannellum/pannellum.js"></script>
@@ -311,25 +141,27 @@
             scene3: document.getElementById('audioPlayer3'),
             scene4: document.getElementById('audioPlayer4')
         };
-
+    
+        const audioDelay = 2000; // Delay in milliseconds (2000ms = 2 seconds)
+    
         document.addEventListener('DOMContentLoaded', function() {
             initViewer();
         });
-
+    
         function initViewer() {
             const scenes = {
                 scene1: {
                     title: 'Scene 1',
                     type: 'equirectangular',
-                    panorama: 'sample-pano.jpg',
+                    panorama: 'sample-pano.png',
                     hotSpots: [
-                        { pitch: 10, yaw: 20, type: 'scene', text: 'To Scene 2', sceneId: 'scene2' }
+                        { pitch: -10, yaw: 100, type: 'scene', text: 'To Scene 2', sceneId: 'scene2' }
                     ]
                 },
                 scene2: {
                     title: 'Scene 2',
                     type: 'equirectangular',
-                    panorama: 'pano2.jpg',
+                    panorama: 'pano2.png',
                     hotSpots: [
                         { pitch: -10, yaw: -20, type: 'scene', text: 'To Scene 1', sceneId: 'scene1' }
                     ]
@@ -337,7 +169,7 @@
                 scene3: {
                     title: 'Scene 3',
                     type: 'equirectangular',
-                    panorama: 'pano3.jpg',
+                    panorama: 'pano3.png',
                     hotSpots: [
                         { pitch: 5, yaw: 30, type: 'scene', text: 'To Scene 4', sceneId: 'scene4' }
                     ]
@@ -350,9 +182,8 @@
                         { pitch: -5, yaw: -30, type: 'scene', text: 'To Scene 3', sceneId: 'scene3' }
                     ]
                 }
-                // Add more scenes as needed
             };
-
+    
             viewer = pannellum.viewer('panorama', {
                 "default": {
                     "firstScene": 'scene1',
@@ -361,32 +192,44 @@
                 },
                 "scenes": scenes
             });
-
+    
             viewer.on('scenechange', function(sceneId) {
                 handleSceneChange(sceneId);
             });
-
-            playAudio(audioPlayers['scene1']);
-
+    
+            preloadImage(scenes['scene1'].panorama).then(() => {
+                viewer.loadScene('scene1');
+                setTimeout(() => {
+                    playAudio(audioPlayers['scene1']);
+                }, audioDelay);
+            });
+    
             const placeList = document.getElementById('placeList');
             placeList.innerHTML = ''; // Clear existing list items
-
+    
             for (const [sceneId, scene] of Object.entries(scenes)) {
                 const listItem = document.createElement('li');
                 listItem.textContent = scene.title;
-                listItem.onclick = () => viewer.loadScene(sceneId);
+                listItem.onclick = () => {
+                    viewer.loadScene(sceneId);
+                    handleSceneChange(sceneId);
+                };
                 placeList.appendChild(listItem);
             }
         }
-
+    
         function handleSceneChange(sceneId) {
             for (const [key, audioPlayer] of Object.entries(audioPlayers)) {
                 audioPlayer.pause();
                 audioPlayer.currentTime = 0;
             }
-            playAudio(audioPlayers[sceneId]);
+            preloadImage(viewer.getConfig().scenes[sceneId].panorama).then(() => {
+                setTimeout(() => {
+                    playAudio(audioPlayers[sceneId]);
+                }, audioDelay);
+            });
         }
-
+    
         function playAudio(audioElement) {
             if (audioElement) {
                 audioElement.currentTime = 0; // Restart the audio
@@ -401,14 +244,14 @@
                 }
             }
         }
-
+    
         document.getElementById('toggleDashboard').addEventListener('click', function() {
             const dashboard = document.getElementById('dashboard');
             dashboard.classList.toggle('active');
             const toggleButton = document.getElementById('toggleDashboard');
             toggleButton.textContent = dashboard.classList.contains('active') ? 'X' : '↔️';
         });
-
+    
         function searchScenes() {
             const searchInput = document.getElementById('searchInput').value.toLowerCase();
             const listItems = document.querySelectorAll('#placeList li');
@@ -420,23 +263,34 @@
                 }
             });
         }
-
+    
         // Navigation functions
         function moveLeft() {
             if (viewer) viewer.setYaw(viewer.getYaw() - 90);
         }
-
+    
         function moveRight() {
-            if (viewer) viewer.setYaw(viewer.getYaw()+90);
+            if (viewer) viewer.setYaw(viewer.getYaw() + 90);
         }
-        function moveUp(){
-            if(viewer)viewer.setPitch(viewer.getPitch()+10);
+    
+        function moveUp() {
+            if (viewer) viewer.setPitch(viewer.getPitch() + 10);
         }
-
-
+    
         function moveDown() {
             if (viewer) viewer.setPitch(viewer.getPitch() - 10);
         }
+    
+        // Preload image
+        function preloadImage(imageSrc) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.src = imageSrc;
+                img.onload = resolve;
+                img.onerror = reject;
+            });
+        }
     </script>
+    
 </body>
 </html>
